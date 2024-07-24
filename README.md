@@ -18,4 +18,4 @@ Do not `pip install pywin32` on non-Windows machines (i.e., remove this from `re
 
 ### Calibration
 
-Three calibration notebooks and a 14x10 calibration grid are provided under `calib/` based on OpenCV and `scikit-surgery` documentation tutorials. Innodisk `EV2U-SGR1` camera was calibrated using `calib.ipynb` and `calibration-grid-6mm.pdf`.
+Three calibration notebooks and a 14x10 calibration grid are provided under `calib/` based on OpenCV and `scikit-surgery` documentation tutorials. Innodisk `EV2U-SGR1` camera was calibrated using `calib.ipynb` and `calibration-grid-6mm.pdf`. `calib/` also provides `generate_arucoboard.ipynb` if you need to generate a board of ArUco fiducials.

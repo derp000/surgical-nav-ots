@@ -26,9 +26,6 @@ dist = np.array(
     ]
 )
 
-# From samples/cpp/tutorial_code/objectDetection/create_board.cpp
-# Define units however you like
-# Only thing setting marker_len, etc. does is compute PnP in the units you give
 marker_len = 0.77 / 100  # cm to m
 marker_separation = 0.7 * marker_len
 num_markers_x = 5
