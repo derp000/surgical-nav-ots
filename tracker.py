@@ -26,7 +26,7 @@ dist = np.array(
     ]
 )
 
-marker_len = 0.77 / 100  # cm to m
+marker_len = 1.26 / 100  # cm to m
 marker_separation = 0.7 * marker_len
 num_markers_x = 5
 num_markers_y = 5
@@ -84,7 +84,13 @@ def main():
 
             cv2.aruco.drawDetectedMarkers(frame, corners, ids)
             if objectPoints.shape[0] // 4 > 0:
+
                 cv2.drawFrameAxes(frame, mtx, dist, rvec, tvec, marker_len * 2, 2)
+                # cam to needle pose
+                # tvec[0] -= 0.014
+                # tvec[1] -= 0.014
+                # tvec[2] -= 0.168
+
                 cv2.putText(
                     frame, str(tvec[0]), (0, 64), font, 1, (0, 255, 0), 2, cv2.LINE_AA
                 )
