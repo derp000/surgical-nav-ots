@@ -90,7 +90,6 @@ def main():
                 # tvec[0] -= 0.014
                 # tvec[1] -= 0.014
                 # tvec[2] -= 0.168
-
                 cv2.putText(
                     frame, str(tvec[0]), (0, 64), font, 1, (0, 255, 0), 2, cv2.LINE_AA
                 )
@@ -114,11 +113,41 @@ def main():
                     2,
                     cv2.LINE_AA,
                 )
+                cv2.putText(
+                    frame,
+                    str(rvec),
+                    (0, 64 * 4),
+                    font,
+                    1,
+                    (0, 255, 0),
+                    2,
+                    cv2.LINE_AA,
+                )
 
+            x_n = (-0.01599 - 0.006) * 1000
+            y_n = 0
+            z_n = -0.1674 * 1000
+            cam_to_tip = np.array(
+                [[1, 0, 0, x_n], [0, 1, 0, y_n], [0, 0, 1, z_n], [0, 0, 0, 1]],
+                dtype=float,
+            )
+
+            pose = np.matmul(cam_to_tip, vector_to_matrix(tvec, rvec))
             pos_msg = pyigtl.TransformMessage(
-                vector_to_matrix(tvec, rvec),
+                matrix=pose,
                 timestamp=time.time(),
                 device_name="Position",
+            )
+
+            cv2.putText(
+                frame,
+                f"{pose[0][3]}, {pose[1][3]}, {pose[2][3]}",
+                (0, 64 * 5),
+                font,
+                1,
+                (0, 255, 0),
+                2,
+                cv2.LINE_AA,
             )
 
             cv2.circle(frame, (1920 // 2, 1080 // 2), 10, (255, 0, 0), 2)
