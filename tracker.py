@@ -5,6 +5,8 @@ import cv2.aruco as aruco
 import pyigtl
 import time
 
+from scipy.spatial.transform import Rotation
+
 # .69 rms x 18 images using `calib.ipynb`
 mtx = np.array(
     [
@@ -110,37 +112,66 @@ def main():
                 )
                 cv2.putText(
                     frame,
-                    str(rvec),
+                    str(
+                        Rotation.from_matrix(cv2.Rodrigues(rvec)[0][:3, :3]).as_euler(
+                            "xyz"
+                        )
+                    ),
                     (0, 64 * 4),
                     font,
                     1,
-                    (0, 255, 0),
+                    (255, 0, 0),
                     2,
                     cv2.LINE_AA,
                 )
 
-            x_n = (-0.01599 - 0.006) * 1000
+            # mm for slicer
+            x_n = -26
             y_n = 0
-            z_n = -0.1674 * 1000
-            cam_to_tip = np.array(
+            z_n = 167.948
+            tip_to_cam = np.array(
                 [[1, 0, 0, x_n], [0, 1, 0, y_n], [0, 0, 1, z_n], [0, 0, 0, 1]],
                 dtype=float,
             )
 
-            pose = np.matmul(cam_to_tip, vector_to_matrix(tvec, rvec))
+            cam_to_world = np.linalg.inv(vector_to_matrix(tvec, rvec))
+            # cam_to_world, _ = vector_to_matrix(tvec, rvec)
+            # pose = tip_to_cam @ cam_to_world
+            pose = cam_to_world
             pos_msg = pyigtl.TransformMessage(
                 matrix=pose,
                 timestamp=time.time(),
                 device_name="Position",
             )
 
+            pose_vec = Rotation.from_matrix(pose[:3, :3]).as_euler("xyz")
             cv2.putText(
                 frame,
-                f"{pose[0][3]}, {pose[1][3]}, {pose[2][3]}",
+                f"P_inv{pose[:3, 3]}",
                 (0, 64 * 5),
                 font,
                 1,
-                (0, 255, 0),
+                (255, 0, 0),
+                2,
+                cv2.LINE_AA,
+            )
+            cv2.putText(
+                frame,
+                "rpy_inv" + str(pose_vec),
+                (0, 64 * 6),
+                font,
+                1,
+                (255, 0, 0),
+                2,
+                cv2.LINE_AA,
+            )
+            cv2.putText(
+                frame,
+                f"P_inv_needle{(tip_to_cam @ cam_to_world)[:3, 3]}",
+                (0, 64 * 7),
+                font,
+                1,
+                (255, 0, 0),
                 2,
                 cv2.LINE_AA,
             )
@@ -188,14 +219,18 @@ def vector_to_matrix(
         [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 1]], dtype=float
     )
 
-    rvec[2] = 0
-
     # Rodrigues needed to turn rvec into a rot mat!
     # https://stackoverflow.com/questions/53277597/fundamental-understanding-of-tvecs-rvecs-in-opencv-aruco
+    # rvec is a compact Rodrigues vector of form [a, b, c] rather than [theta, x, y, z], so it's not represented in Euler angles
+    # https://stackoverflow.com/questions/12933284/rodrigues-into-eulerangles-and-vice-versa
     needle_pos[:3, :3], _ = cv2.Rodrigues(rvec)
 
     # convert to mm for slicer
     needle_pos[:3, 3] = tvec[:, 0] * 1000
+
+    cam_pos = -np.matrix(needle_pos[:3, :3]).T * np.matrix(tvec)
+    print(cam_pos)
+
     return needle_pos
 
 
