@@ -84,12 +84,7 @@ def main():
 
             cv2.aruco.drawDetectedMarkers(frame, corners, ids)
             if objectPoints.shape[0] // 4 > 0:
-
                 cv2.drawFrameAxes(frame, mtx, dist, rvec, tvec, marker_len * 2, 2)
-                # cam to needle pose
-                # tvec[0] -= 0.014
-                # tvec[1] -= 0.014
-                # tvec[2] -= 0.168
                 cv2.putText(
                     frame, str(tvec[0]), (0, 64), font, 1, (0, 255, 0), 2, cv2.LINE_AA
                 )
@@ -155,7 +150,7 @@ def main():
             # code to show 'No Ids' when no markers are found
             cv2.putText(frame, "No Ids", (0, 64), font, 1, (0, 255, 0), 2, cv2.LINE_AA)
             pos_msg = pyigtl.TransformMessage(
-                np.zeros((4, 4)), timestamp=time.time(), device_name="Position"
+                np.identity(4), timestamp=time.time(), device_name="Position"
             )
 
         print(pos_msg)
@@ -192,6 +187,8 @@ def vector_to_matrix(
     needle_pos = np.array(
         [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 1]], dtype=float
     )
+
+    rvec[2] = 0
 
     # Rodrigues needed to turn rvec into a rot mat!
     # https://stackoverflow.com/questions/53277597/fundamental-understanding-of-tvecs-rvecs-in-opencv-aruco
