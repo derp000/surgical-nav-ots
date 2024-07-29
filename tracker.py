@@ -88,31 +88,39 @@ def main():
             if objectPoints.shape[0] // 4 > 0:
                 cv2.drawFrameAxes(frame, mtx, dist, rvec, tvec, marker_len * 2, 2)
                 cv2.putText(
-                    frame, str(tvec[0]), (0, 64), font, 1, (0, 255, 0), 2, cv2.LINE_AA
-                )
-                cv2.putText(
                     frame,
-                    str(tvec[1]),
-                    (0, 64 * 2),
+                    "tvec" + str(tvec * 1000),
+                    (0, 64),
                     font,
                     1,
                     (0, 255, 0),
                     2,
                     cv2.LINE_AA,
                 )
+                # cv2.putText(
+                #     frame,
+                #     str(tvec[1]),
+                #     (0, 64 * 2),
+                #     font,
+                #     1,
+                #     (0, 255, 0),
+                #     2,
+                #     cv2.LINE_AA,
+                # )
+                # cv2.putText(
+                #     frame,
+                #     str(tvec[2]),
+                #     (0, 64 * 3),
+                #     font,
+                #     1,
+                #     (0, 255, 0),
+                #     2,
+                #     cv2.LINE_AA,
+                # )
                 cv2.putText(
                     frame,
-                    str(tvec[2]),
-                    (0, 64 * 3),
-                    font,
-                    1,
-                    (0, 255, 0),
-                    2,
-                    cv2.LINE_AA,
-                )
-                cv2.putText(
-                    frame,
-                    str(
+                    "rot"
+                    + str(
                         Rotation.from_matrix(cv2.Rodrigues(rvec)[0][:3, :3]).as_euler(
                             "xyz"
                         )
@@ -134,10 +142,28 @@ def main():
                 dtype=float,
             )
 
-            cam_to_world = np.linalg.inv(vector_to_matrix(tvec, rvec))
-            # cam_to_world, _ = vector_to_matrix(tvec, rvec)
-            # pose = tip_to_cam @ cam_to_world
-            pose = cam_to_world
+            print(tvec, rvec)
+            print(tvec.shape, rvec.shape)
+
+            # cam_to_world = np.linalg.inv(vector_to_matrix(tvec, rvec))
+            cam_to_world = np.identity(4)
+            rvec_inv = cv2.Rodrigues(rvec)[0].T
+            cam_to_world[:3, :3] = rvec_inv
+            print(-rvec_inv.dot(tvec))
+            cam_to_world[:3, 3] = -rvec_inv.dot(tvec).reshape(1, 3)
+
+            # https://lavalle.pl/vr/node81.html
+            # d = np.identity(4)
+            # d[:3, 3] = -tvec.reshape(1, 3)
+            # print(d)
+            # rvec_inv = np.identity(4)
+            # rvec_inv[:3, :3] = cv2.Rodrigues(rvec)[0].T
+            # cam_to_world = rvec_inv @ d
+
+            # expected way
+            # cam_to_world = np.linalg.inv(vector_to_matrix(tvec, rvec))
+            pose = tip_to_cam @ cam_to_world
+
             pos_msg = pyigtl.TransformMessage(
                 matrix=pose,
                 timestamp=time.time(),
@@ -147,7 +173,7 @@ def main():
             pose_vec = Rotation.from_matrix(pose[:3, :3]).as_euler("xyz")
             cv2.putText(
                 frame,
-                f"P_inv{pose[:3, 3]}",
+                f"P_inv{cam_to_world[:3, 3]}",
                 (0, 64 * 5),
                 font,
                 1,
@@ -167,7 +193,7 @@ def main():
             )
             cv2.putText(
                 frame,
-                f"P_inv_needle{(tip_to_cam @ cam_to_world)[:3, 3]}",
+                f"P_inv_needle{pose[:3, 3]}",
                 (0, 64 * 7),
                 font,
                 1,
