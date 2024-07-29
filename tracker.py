@@ -134,7 +134,7 @@ def main():
                 )
 
             # mm for slicer
-            x_n = -26
+            x_n = 26
             y_n = 0
             z_n = 167.948
             tip_to_cam = np.array(
@@ -145,12 +145,14 @@ def main():
             print(tvec, rvec)
             print(tvec.shape, rvec.shape)
 
-            # cam_to_world = np.linalg.inv(vector_to_matrix(tvec, rvec))
-            cam_to_world = np.identity(4)
-            rvec_inv = cv2.Rodrigues(rvec)[0].T
-            cam_to_world[:3, :3] = rvec_inv
-            print(-rvec_inv.dot(tvec))
-            cam_to_world[:3, 3] = -rvec_inv.dot(tvec).reshape(1, 3)
+            cam_to_world = np.linalg.inv(vector_to_matrix(tvec, rvec))
+            # dot product?
+            # https://stackoverflow.com/questions/14444433/calculate-camera-world-position-with-opencv-python
+            # cam_to_world = np.identity(4)
+            # rvec_inv = cv2.Rodrigues(rvec)[0].T
+            # cam_to_world[:3, :3] = rvec_inv
+            # print(-rvec_inv.dot(tvec))
+            # cam_to_world[:3, 3] = -rvec_inv.dot(tvec).reshape(1, 3) * 1000
 
             # https://lavalle.pl/vr/node81.html
             # d = np.identity(4)
@@ -162,7 +164,7 @@ def main():
 
             # expected way
             # cam_to_world = np.linalg.inv(vector_to_matrix(tvec, rvec))
-            pose = tip_to_cam @ cam_to_world
+            pose = cam_to_world.dot(tip_to_cam)
 
             pos_msg = pyigtl.TransformMessage(
                 matrix=pose,
@@ -170,7 +172,7 @@ def main():
                 device_name="Position",
             )
 
-            pose_vec = Rotation.from_matrix(pose[:3, :3]).as_euler("xyz")
+            pose_vec = Rotation.from_matrix(cam_to_world[:3, :3]).as_euler("xyz")
             cv2.putText(
                 frame,
                 f"P_inv{cam_to_world[:3, 3]}",
