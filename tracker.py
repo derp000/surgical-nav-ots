@@ -74,10 +74,7 @@ def main():
         font = cv2.FONT_HERSHEY_SIMPLEX
 
         if np.all(ids != None):
-            # aruco.drawDetectedMarkers(frame, corners, ids)
-
             objectPoints, imagePoints = arucoboard.matchImagePoints(corners, ids)
-
             try:
                 _, rvec, tvec = cv2.solvePnP(objectPoints, imagePoints, mtx, dist)
             except cv2.error:
@@ -97,38 +94,18 @@ def main():
                     2,
                     cv2.LINE_AA,
                 )
-                # cv2.putText(
-                #     frame,
-                #     str(tvec[1]),
-                #     (0, 64 * 2),
-                #     font,
-                #     1,
-                #     (0, 255, 0),
-                #     2,
-                #     cv2.LINE_AA,
-                # )
-                # cv2.putText(
-                #     frame,
-                #     str(tvec[2]),
-                #     (0, 64 * 3),
-                #     font,
-                #     1,
-                #     (0, 255, 0),
-                #     2,
-                #     cv2.LINE_AA,
-                # )
                 cv2.putText(
                     frame,
-                    "rot"
+                    "rpy"
                     + str(
                         Rotation.from_matrix(cv2.Rodrigues(rvec)[0][:3, :3]).as_euler(
                             "xyz"
                         )
                     ),
-                    (0, 64 * 4),
+                    (0, 64 * 2),
                     font,
                     1,
-                    (255, 0, 0),
+                    (0, 255, 0),
                     2,
                     cv2.LINE_AA,
                 )
@@ -142,28 +119,7 @@ def main():
                 dtype=float,
             )
 
-            print(tvec, rvec)
-            print(tvec.shape, rvec.shape)
-
-            cam_to_world = np.linalg.inv(vector_to_matrix(tvec, rvec))
-            # dot product?
-            # https://stackoverflow.com/questions/14444433/calculate-camera-world-position-with-opencv-python
-            # cam_to_world = np.identity(4)
-            # rvec_inv = cv2.Rodrigues(rvec)[0].T
-            # cam_to_world[:3, :3] = rvec_inv
-            # print(-rvec_inv.dot(tvec))
-            # cam_to_world[:3, 3] = -rvec_inv.dot(tvec).reshape(1, 3) * 1000
-
-            # https://lavalle.pl/vr/node81.html
-            # d = np.identity(4)
-            # d[:3, 3] = -tvec.reshape(1, 3)
-            # print(d)
-            # rvec_inv = np.identity(4)
-            # rvec_inv[:3, :3] = cv2.Rodrigues(rvec)[0].T
-            # cam_to_world = rvec_inv @ d
-
-            # expected way
-            # cam_to_world = np.linalg.inv(vector_to_matrix(tvec, rvec))
+            cam_to_world = np.linalg.inv(vector_to_matrix(tvec * 1000, rvec))
             pose = cam_to_world.dot(tip_to_cam)
 
             pos_msg = pyigtl.TransformMessage(
@@ -247,14 +203,14 @@ def vector_to_matrix(
         [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 1]], dtype=float
     )
 
-    # Rodrigues needed to turn rvec into a rot mat!
+    # Rodrigues needed to turn rvec into a rot mat
     # https://stackoverflow.com/questions/53277597/fundamental-understanding-of-tvecs-rvecs-in-opencv-aruco
     # rvec is a compact Rodrigues vector of form [a, b, c] rather than [theta, x, y, z], so it's not represented in Euler angles
     # https://stackoverflow.com/questions/12933284/rodrigues-into-eulerangles-and-vice-versa
     needle_pos[:3, :3], _ = cv2.Rodrigues(rvec)
 
     # convert to mm for slicer
-    needle_pos[:3, 3] = tvec[:, 0] * 1000
+    needle_pos[:3, 3] = tvec[:, 0]
 
     cam_pos = -np.matrix(needle_pos[:3, :3]).T * np.matrix(tvec)
     print(cam_pos)
