@@ -111,9 +111,9 @@ def main():
                 )
 
             # mm for slicer
-            x_n = 26
-            y_n = 0
-            z_n = 167.948
+            x_n = 21.7
+            y_n = 1
+            z_n = 145
             tip_to_cam = np.array(
                 [[1, 0, 0, x_n], [0, 1, 0, y_n], [0, 0, 1, z_n], [0, 0, 0, 1]],
                 dtype=float,
