@@ -162,7 +162,6 @@ def main():
 
             cv2.circle(frame, (1920 // 2, 1080 // 2), 10, (255, 0, 0), 2)
         else:
-            # code to show 'No Ids' when no markers are found
             cv2.putText(frame, "No Ids", (0, 64), font, 1, (0, 255, 0), 2, cv2.LINE_AA)
             pos_msg = pyigtl.TransformMessage(
                 np.identity(4), timestamp=time.time(), device_name="Position"
@@ -171,19 +170,16 @@ def main():
         print(pos_msg)
         server.send_message(pos_msg, wait=True)
 
-        # display the resulting frame
         cv2.imshow("frame", frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
 
-    # When everything done, release the capture
     cap.release()
     cv2.destroyAllWindows()
 
 
 """
-we want 4x4 but it's just composed of the homogeneous 
-translation and rotation matrix like this (in form of [R|t]):
+we want 4x4 homogeneous translation-rotation matrix:
 
 . . . x
 . . . y
@@ -211,9 +207,6 @@ def vector_to_matrix(
 
     # convert to mm for slicer
     needle_pos[:3, 3] = tvec[:, 0]
-
-    cam_pos = -np.matrix(needle_pos[:3, :3]).T * np.matrix(tvec)
-    print(cam_pos)
 
     return needle_pos
 
