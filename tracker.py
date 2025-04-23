@@ -66,6 +66,7 @@ def main():
 
         # ids and list of four corner points corr. to each id
         # Do NOT try to undistort image before marker detection, detection will be drastically distorted
+        # gray = cv2.undistort(gray, mtx, dist)
         corners, ids, rejectedImgPoints = detector.detectMarkers(gray)
         detector.refineDetectedMarkers(
             gray, arucoboard, corners, ids, rejectedImgPoints, mtx, dist
