@@ -28,7 +28,7 @@ dist = np.array(
     ]
 )
 
-marker_len = 1.26 / 100  # cm to m
+marker_len = 2.0 / 100  # cm to m
 marker_separation = 0.7 * marker_len
 num_markers_x = 5
 num_markers_y = 5
@@ -112,16 +112,20 @@ def main():
                 )
 
             # mm for slicer
-            x_n = 21.7
-            y_n = 1
-            z_n = 145
+            x_n = 36.15
+            y_n = 0
+            z_n = -237.54
             tip_to_cam = np.array(
                 [[1, 0, 0, x_n], [0, 1, 0, y_n], [0, 0, 1, z_n], [0, 0, 0, 1]],
                 dtype=float,
             )
 
+            # no inverse?
             cam_to_world = np.linalg.inv(vector_to_matrix(tvec * 1000, rvec))
+            # world to cam? aka cam ito world
+            # cam_to_world = vector_to_matrix(tvec * 1000, rvec)
             pose = cam_to_world.dot(tip_to_cam)
+            # pose = cam_to_world
 
             pos_msg = pyigtl.TransformMessage(
                 matrix=pose,
@@ -205,6 +209,8 @@ def vector_to_matrix(
     # rvec is a compact Rodrigues vector of form [a, b, c] rather than [theta, x, y, z], so it's not represented in Euler angles
     # https://stackoverflow.com/questions/12933284/rodrigues-into-eulerangles-and-vice-versa
     needle_pos[:3, :3], _ = cv2.Rodrigues(rvec)
+
+    tvec[2, 0] = -tvec[2, 0]
 
     # convert to mm for slicer
     needle_pos[:3, 3] = tvec[:, 0]
